@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Scrapbook</title>
+
+<style>
+
+body{
+margin:0;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:radial-gradient(circle,#3a2020,#140808);
+font-family:Georgia,serif;
+overflow:hidden;
+}
+
+.board{
+position:relative;
+width:1000px;
+height:650px;
+background:#e6d2bb;
+border:12px solid #5a2e2e;
+border-radius:20px;
+box-shadow:0 25px 50px rgba(0,0,0,.7);
+overflow:hidden;
+}
+
+/* PHOTO STRIP */
+
+.strip{
+position:absolute;
+top:120px;
+left:50%;
+transform:translateX(-50%);
+display:flex;
+gap:20px;
+justify-content:center;
+}
+
+.slot{
+width:170px;
+height:210px;
+background:white;
+padding:8px;
+border-radius:10px;
+box-shadow:0 8px 15px rgba(0,0,0,.4);
+}
+
+.slot img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+/* VINTAGE CRANK */
+
+.handle{
+position:absolute;
+top:25px;              /* move to top */
+right:25px;            /* top-right corner */
+width:85px;
+height:85px;
+border-radius:50%;
+background:radial-gradient(circle at 30% 30%, #d8b89b, #7b4b3a);
+border:3px solid #3b1f1f;
+box-shadow:0 5px 12px rgba(0,0,0,.6);
+cursor:pointer;
+transition:transform .6s ease;
+z-index:500;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.handle::after{
+content:"";
+width:10px;
+height:30px;
+background:#3b1f1f;
+border-radius:6px;
+transform:translateY(-28px);
+}
+
+/* CATEGORY BAR */
+
+.category-bar{
+position:absolute;
+top:20px;
+left:20px;
+display:flex;
+gap:6px;
+flex-wrap:wrap;
+z-index:600;
+}
+
+.category-bar button{
+background:#5a2e2e;
+color:white;
+border:none;
+padding:5px 10px;
+border-radius:6px;
+cursor:pointer;
+font-size:13px;
+}
+
+/* STICKER PANEL */
+
+.panel{
+position:absolute;
+bottom:20px;
+left:20px;
+width:960px;
+height:120px;
+overflow-x:auto;
+display:flex;
+gap:10px;
+z-index:600;
+border-top:2px solid #5a2e2e;
+padding-top:8px;
+}
+
+.panel img{
+height:100px;
+cursor:pointer;
+}
+
+/* STICKERS */
+
+.sticker{
+position:absolute;
+cursor:grab;
+transform-origin:center;
+z-index:400;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="board" id="board">
+
+<div class="strip">
+<div class="slot"></div>
+<div class="slot"></div>
+<div class="slot"></div>
+<div class="slot"></div>
+</div>
+
+<div class="handle" id="handle"></div>
+
+<div class="category-bar">
+<button onclick="loadCategory('sticker',9)">Sticker</button>
+<button onclick="loadCategory('note',12)">Note</button>
+<button onclick="loadCategory('bow',2)">Bow</button>
+<button onclick="loadCategory('flower',7)">Flower</button>
+<button onclick="loadCategory('tornpaper',5)">Torn</button>
+<button onclick="loadCategory('quote',8)">Quote</button>
+<button onclick="loadSticky()">Sticky</button>
+<button onclick="loadSingles()">Singles</button>
+</div>
+
+<div class="panel" id="panel"></div>
+
+</div>
+
+<audio id="audio" src="daniel.mp3" preload="auto"></audio>
+
+<script>
+
+/* LOAD STRIP PHOTOS */
+
+const data = JSON.parse(localStorage.getItem("stripImages") || "[]");
+
+document.querySelectorAll(".slot").forEach((slot,i)=>{
+if(data[i]){
+const img=document.createElement("img");
+img.src=data[i];
+slot.appendChild(img);
+}
+});
+
+/* CRANK + AUDIO */
+
+const audio=document.getElementById("audio");
+const handle=document.getElementById("handle");
+
+let rotation=0;
+
+handle.addEventListener("click", function(){
+
+rotation+=360;
+handle.style.transform=`rotate(${rotation}deg)`;
+
+audio.pause();
+audio.currentTime=0;
+
+audio.play().catch(err=>{
+alert("Audio not playing. Check daniel.mp3 name and location.");
+console.log(err);
+});
+
+});
+
+/* STICKER SYSTEM */
+
+let zIndex=400;
+const panel=document.getElementById("panel");
+
+function loadCategory(prefix,count){
+
+panel.innerHTML="";
+
+for(let i=1;i<=count;i++){
+
+const file=`${prefix}${i}.png`;
+
+const img=document.createElement("img");
+img.src=file;
+
+img.onerror=function(){
+console.log("Missing:", file);
+};
+
+img.onclick=()=>addSticker(file);
+
+panel.appendChild(img);
+}
+
+}
+
+function loadSticky(){
+
+panel.innerHTML="";
+
+for(let i=1;i<=14;i++){
+
+const file=`sticky${i}.png`;
+
+const img=document.createElement("img");
+img.src=file;
+img.onclick=()=>addSticker(file);
+
+panel.appendChild(img);
+}
+
+}
+
+function loadSingles(){
+
+panel.innerHTML="";
+
+["sticker.png","note.png","bow.png","flower.png","quote.png","tornpaper.png"]
+.forEach(file=>{
+const img=document.createElement("img");
+img.src=file;
+img.onclick=()=>addSticker(file);
+panel.appendChild(img);
+});
+
+}
+
+function addSticker(src){
+
+const s=document.createElement("img");
+s.src=src;
+s.className="sticker";
+s.style.left="400px";
+s.style.top="350px";
+s.style.width="180px";
+s.style.zIndex=zIndex++;
+
+document.getElementById("board").appendChild(s);
+
+makeInteractive(s);
+}
+
+function makeInteractive(el){
+
+let startX,startY,offsetX,offsetY;
+let scale=1;
+
+el.onpointerdown=e=>{
+startX=e.clientX;
+startY=e.clientY;
+offsetX=el.offsetLeft;
+offsetY=el.offsetTop;
+
+document.onpointermove=ev=>{
+el.style.left=(offsetX + ev.clientX - startX)+"px";
+el.style.top=(offsetY + ev.clientY - startY)+"px";
+};
+
+document.onpointerup=()=>document.onpointermove=null;
+};
+
+el.onwheel=e=>{
+e.preventDefault();
+scale+=e.deltaY*-0.001;
+if(scale<0.2) scale=0.2;
+if(scale>3) scale=3;
+el.style.transform=`scale(${scale})`;
+};
+
+el.oncontextmenu=e=>{
+e.preventDefault();
+el.remove();
+};
+
+}
+
+</script>
+</body>
+</html>

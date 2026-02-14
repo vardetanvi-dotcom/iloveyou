@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Photostrip Builder</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Georgia,serif;
+background:#2b1a1a;
+color:#f4e7d6;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding:30px;
+}
+
+.board{
+background:#e6d2bb;
+padding:20px;
+border-radius:16px;
+border:8px solid #5a2e2e;
+box-shadow:0 10px 25px rgba(0,0,0,.6);
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(2,150px);
+gap:12px;
+margin-top:20px;
+}
+
+.grid img{
+width:150px;
+height:150px;
+object-fit:cover;
+border:3px solid #5a2e2e;
+border-radius:6px;
+}
+
+button,input[type=file]{
+background:#5a2e2e;
+color:white;
+border:none;
+padding:10px 16px;
+border-radius:6px;
+cursor:pointer;
+margin-top:15px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="board">
+
+<h2>Upload Photos (Max 4)</h2>
+
+<input type="file" id="upload" accept="image/*" multiple>
+
+<div class="grid" id="preview"></div>
+
+<button id="go">Generate Strip</button>
+
+</div>
+
+<script>
+
+const upload = document.getElementById("upload");
+const preview = document.getElementById("preview");
+const go = document.getElementById("go");
+
+let images = [];
+
+/* ===== BULLETPROOF UPLOAD ===== */
+
+upload.addEventListener("change", function(){
+
+preview.innerHTML = "";
+images = [];
+
+const files = this.files;
+
+if(!files || files.length === 0) return;
+
+for(let i = 0; i < files.length && i < 4; i++){
+
+const file = files[i];
+const reader = new FileReader();
+
+reader.onload = function(e){
+
+/* push without overwriting */
+
+images.push(e.target.result);
+
+/* preview */
+
+const img = document.createElement("img");
+img.src = e.target.result;
+preview.appendChild(img);
+
+/* store immediately */
+
+localStorage.setItem(
+"stripImages",
+JSON.stringify(images)
+);
+
+};
+
+reader.readAsDataURL(file);
+
+}
+
+});
+
+/* generate strip */
+
+go.onclick = function(){
+
+if(images.length === 0){
+alert("Upload photos first!");
+return;
+}
+
+window.location = "strip.html";
+
+};
+
+</script>
+
+</body>
+</html>
